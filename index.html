@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Deepak Deon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Noto+Sans+Malayalam:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #060a07;
+        --term-bg: #0a0f0a;
+        --term-edge: #1d2b1e;
+        --green: #4ade80;
+        --green-bright: #86efac;
+        --green-dim: #3f6212;
+        --amber: #fbbf24;
+        --cyan: #22d3ee;
+        --text: #c9d6c5;
+        --text-dim: #7d8f78;
+        --red: #f87171;
+        --glow: 0 0 6px rgba(74, 222, 128, 0.35);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(1100px 600px at 50% -10%, rgba(74, 222, 128, 0.07), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font-family: "JetBrains Mono", "Noto Sans Malayalam", ui-monospace, monospace;
+        font-size: 15px;
+        line-height: 1.55;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 22px 14px 18px;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation: none !important; transition: none !important; }
+      }
+
+      .preview-note {
+        color: var(--text-dim);
+        font-size: 12.5px;
+        text-align: center;
+        margin: 0 0 14px;
+      }
+      .preview-note strong { color: var(--amber); font-weight: 500; }
+
+      /* ---------- terminal window ---------- */
+      .terminal {
+        width: 100%;
+        max-width: 920px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--term-bg);
+        border: 1px solid var(--term-edge);
+        border-radius: 12px;
+        box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 44px -18px rgba(74, 222, 128, 0.25);
+        overflow: hidden;
+        min-height: 0;
+      }
+      .titlebar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        background: #0e150e;
+        border-bottom: 1px solid var(--term-edge);
+        flex: none;
+      }
+      .dots { display: flex; gap: 8px; }
+      .dot { width: 12px; height: 12px; border-radius: 50%; }
+      .dot.r { background: #ff5f57; }
+      .dot.y { background: #febc2e; }
+      .dot.g { background: #28c840; }
+      .titlebar .title {
+        flex: 1;
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .titlebar .shell { color: var(--text-dim); font-size: 12px; }
+
+      .screen {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 18px 8px;
+        cursor: text;
+        scrollbar-width: thin;
+        scrollbar-color: var(--green-dim) transparent;
+      }
+      .screen::-webkit-scrollbar { width: 8px; }
+      .screen::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 4px; }
+
+      .line { white-space: pre-wrap; word-break: break-word; margin: 0 0 2px; }
+      .line.gap { margin-bottom: 12px; }
+      .dim { color: var(--text-dim); }
+      .grn { color: var(--green); text-shadow: var(--glow); }
+      .bright { color: var(--green-bright); }
+      .amb { color: var(--amber); }
+      .cyn { color: var(--cyan); }
+      .red { color: var(--red); }
+      .b { font-weight: 700; }
+      .ml { font-family: "Noto Sans Malayalam", "JetBrains Mono", sans-serif; }
+      .screen a { color: var(--cyan); text-decoration: none; border-bottom: 1px dotted rgba(34, 211, 238, 0.5); }
+      .screen a:hover { color: #a5f3fc; border-bottom-style: solid; }
+
+      .banner {
+        font-size: clamp(6.5px, 2.35vw, 12.5px);
+        line-height: 1.25;
+        color: var(--green);
+        text-shadow: var(--glow);
+        white-space: pre;
+        margin: 2px 0 10px;
+        overflow-x: hidden;
+      }
+
+      /* ---------- input line ---------- */
+      .input-line {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 2px 0 14px;
+      }
+      .prompt { flex: none; white-space: nowrap; }
+      .prompt .user { color: var(--green); font-weight: 700; text-shadow: var(--glow); }
+      .prompt .path { color: var(--cyan); }
+      .prompt .sym { color: var(--text); }
+      #cmdInput {
+        flex: 1;
+        min-width: 40px;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--green-bright);
+        font: inherit;
+        font-size: 16px; /* keeps iOS from zooming on focus */
+        caret-color: var(--green);
+        padding: 0;
+      }
+      @media (min-width: 720px) { #cmdInput { font-size: 15px; } }
+      #cmdInput::placeholder { color: #43543f; }
+
+      /* ---------- quick commands ---------- */
+      .quickbar {
+        flex: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 14px;
+        border-top: 1px solid var(--term-edge);
+        background: #0c120c;
+        align-items: center;
+      }
+      .quickbar .hint { color: var(--text-dim); font-size: 12.5px; margin-right: 2px; }
+      .qbtn {
+        font: inherit;
+        font-size: 13px;
+        color: var(--green-bright);
+        background: rgba(74, 222, 128, 0.07);
+        border: 1px solid var(--green-dim);
+        border-radius: 6px;
+        padding: 5px 12px;
+        cursor: pointer;
+      }
+      .qbtn:hover, .qbtn:active { background: rgba(74, 222, 128, 0.18); border-color: var(--green); }
+      .qbtn::before { content: "$ "; color: var(--text-dim); }
+
+      .foot {
+        margin: 14px 0 0;
+        color: var(--text-dim);
+        font-size: 12.5px;
+        text-align: center;
+      }
+      .foot .ml { font-family: "Noto Sans Malayalam", sans-serif; }
+    </style>
+  </head>
+  <body>
+    <p class="preview-note"><strong>Design preview</strong> — a mockup of deepakdeon.com as an interactive terminal. The domain isn't live yet. Type <strong>help</strong> to explore.</p>
+
+    <div class="terminal" role="application" aria-label="Interactive terminal — type help to explore Deepak Deon's site">
+      <div class="titlebar" aria-hidden="true">
+        <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+        <div class="title">visitor@deepakdeon: ~/home — bash</div>
+        <div class="shell">80×24</div>
+      </div>
+
+      <div class="screen" id="screen">
+        <div id="output" aria-live="polite"></div>
+        <form class="input-line" id="cmdForm" autocomplete="off">
+          <span class="prompt" aria-hidden="true"><span class="user">visitor@deepakdeon</span><span class="sym">:</span><span class="path">~</span><span class="sym">$</span></span>
+          <input id="cmdInput" type="text" placeholder="type a command…" aria-label="Terminal command input" autocapitalize="off" autocorrect="off" spellcheck="false" />
+        </form>
+      </div>
+
+      <div class="quickbar" aria-label="Quick commands">
+        <span class="hint">try:</span>
+        <button class="qbtn" type="button" data-cmd="help">help</button>
+        <button class="qbtn" type="button" data-cmd="about">about</button>
+        <button class="qbtn" type="button" data-cmd="links">links</button>
+        <button class="qbtn" type="button" data-cmd="memories">memories</button>
+        <button class="qbtn" type="button" data-cmd="telegram">telegram</button>
+        <button class="qbtn" type="button" data-cmd="contact">contact</button>
+        <button class="qbtn" type="button" data-cmd="clear">clear</button>
+      </div>
+    </div>
+
+    <p class="foot">© 2026 Deepak Deon</p>
+
+    <script>
+      (function () {
+        var screen = document.getElementById("screen");
+        var output = document.getElementById("output");
+        var form = document.getElementById("cmdForm");
+        var input = document.getElementById("cmdInput");
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        var BANNER =
+"██████╗ ███████╗ ██████╗ ███╗   ██╗\n" +
+"██╔══██╗██╔════╝██╔═══██╗████╗  ██║\n" +
+"██║  ██║█████╗  ██║   ██║██╔██╗ ██║\n" +
+"██║  ██║██╔══╝  ██║   ██║██║╚██╗██║\n" +
+"██████╔╝███████╗╚██████╔╝██║ ╚████║\n" +
+"╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝";
+
+        function esc(s) {
+          return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+        function scrollBottom() { screen.scrollTop = screen.scrollHeight; }
+        function print(html, cls) {
+          var d = document.createElement("div");
+          d.className = "line" + (cls ? " " + cls : "");
+          d.innerHTML = html;
+          output.appendChild(d);
+          scrollBottom();
+        }
+        function printBanner() {
+          var d = document.createElement("div");
+          d.className = "banner";
+          d.textContent = BANNER;
+          output.appendChild(d);
+          scrollBottom();
+        }
+
+        var PROMPT_HTML = '<span class="grn b">visitor@deepakdeon</span><span>:</span><span class="cyn">~</span><span>$</span>';
+
+        /* ---------------- command outputs ---------------- */
+
+        function cmdHelp() {
+          print('<span class="bright b">Available commands:</span>', "gap");
+          var rows = [
+            ["about", "who I am"],
+            ["links", "all my links, in one list"],
+            ["memories", "Memories — all 42 stories &amp; notes"],
+            ["telegram", "posts about Telegram — all 31 articles"],
+            ["contact", "how to reach me"],
+            ["whoami", "a short intro"],
+            ["banner", "show the banner again"],
+            ["date", "current date &amp; time"],
+            ["echo &lt;text&gt;", "print something back"],
+            ["clear", "clear the terminal"]
+          ];
+          rows.forEach(function (r) {
+            print('  <span class="grn">' + r[0] + '</span>' + pad(r[0], 16) + '<span class="dim">' + r[1] + '</span>');
+          });
+          print("", "");
+          print('<span class="dim">Tip: ↑ / ↓ for command history, Tab to autocomplete, or tap a command below.</span>', "gap");
+        }
+        function pad(s, n) {
+          var t = "";
+          for (var i = s.replace(/&lt;|&gt;|&amp;/g, "x").length; i < n; i++) t += " ";
+          return t;
+        }
+
+        var LINKS = [
+          ["Memories", "https://te.legra.ph/Memories-12-15"],
+          ["Posts about Telegram", "https://te.legra.ph/Telegram-uyir-09-20"],
+          ["Android / Tech", "https://te.legra.ph/Android-lub-12-16"],
+          ["Spotify podcast - DeonTalks", "https://open.spotify.com/show/2XOCBeuNXYP01bWnrN84jQ"],
+          ["Instagram", "http://instagram.com/deepak.deon"],
+          ["Facebook", "http://facebook.com/iDeeepak"],
+          ["YouTube", "https://youtube.com/deepak-deon"],
+          ["Telegram", "https://t.me/Deonnn"],
+          ["WhatsApp", "https://wa.me/919496063626?text=Hello%20Deon,%20What's%20up?%20"],
+          ["Twitter / X", "http://twitter.com/iDeeepak"],
+          ["Spotify", "https://open.spotify.com/user/31oocahzy76wkoagz7qx5pqhyorm?si=bpTzbgjqQsWsI7y30bgoJQ"],
+          ["Snapchat", "https://www.snapchat.com/add/deepak.deon"],
+          ["GitHub", "http://github.com/d30n"],
+          ["deepakdeon@yahoo.com", "mailto:deepakdeon@yahoo.com"]
+        ];
+
+        function linkLine(i, l) {
+          var num = (i + 1 < 10 ? " " : "") + (i + 1);
+          return '  <span class="dim">' + num + '.</span>  <a href="' + l[1] + '" target="_blank" rel="noopener">' + esc(l[0]) + '</a>';
+        }
+
+        function cmdAbout() {
+          print('<span class="bright b">Deepak Deon</span>');
+          print('Blogger • Tweep • Tech enthusiast');
+          print('Telegram 💙 | AndroidCommunity 🤖');
+          print("");
+          print('Run <span class="grn">links</span> to see everywhere you can find me.', "gap");
+        }
+
+        function cmdLinks() {
+          print('<span class="bright b">All my links:</span>', "gap");
+          LINKS.forEach(function (l, i) { print(linkLine(i, l)); });
+          print("", "gap");
+        }
+
+        var MEMORIES = [
+          ["സ്കൂൾ നൊസ്റ്റ", "https://te.legra.ph/School-nosta-05-07"],
+          ["ക്രിക്കറ്റ് നൊസ്റ്റ", "https://te.legra.ph/Cricket-nosta-05-07"],
+          ["പാരീസിലെ പൂക്കൾ", "https://te.legra.ph/Flowers-of-Paris-05-07"],
+          ["ഫുഡ് അലർജി", "https://te.legra.ph/Food-allergy-01-10"],
+          ["ജോ, ലീന, അജു", "https://te.legra.ph/Joe-Leena-Aju-05-07"],
+          ["ഗാന്ധർവ്വശ്രുതി", "https://te.legra.ph/Gandharvasruthy-05-07"],
+          ["പ്രണയം", "https://te.legra.ph/Love-05-07-5"],
+          ["ഓർമ്മയിലെ പേരക്കാമാങ്ങകൾ", "https://te.legra.ph/Ormmayile-perakka-mangakal-05-07"],
+          ["ഇടവഴിയിലെ മൂർഖൻ", "https://te.legra.ph/Idavazhiyile-moorkhan-05-07"],
+          ["എന്റെ മൂന്ന് വിലപ്പെട്ട വാളുകൾ", "https://te.legra.ph/My-3-favourite-swords-05-07"],
+          ["തുമ്പച്ചെടി", "https://te.legra.ph/Thumbachedi-05-07"],
+          ["കാട്ടാമ്പള്ളിൽ", "https://te.legra.ph/Kattamballil-05-07"],
+          ["മിന്നാമിനുങ്ങിന്റെ ഇംഗ്ലീഷ്", "https://te.legra.ph/Minnaminunginte-English-05-07"],
+          ["ഒരു നാരങ്ങാ കലക്കിയ കഥ", "https://te.legra.ph/Oru-naranga-kadha-05-07"],
+          ["ഞാള്ളാ ദൂക്കുട്ടനാ", "https://te.legra.ph/Njallaaa-Dookkuttnaa-05-07"],
+          ["കോഞ്ചന", "https://te.legra.ph/Konjana-05-07"],
+          ["ഒരു ദുഃസ്വപ്നം", "https://te.legra.ph/One-bad-dream-05-07"],
+          ["നീലി weds പീയെസ്സ്", "https://te.legra.ph/Neeli-weds-Peeyes-05-07"],
+          ["എന്തൂട്ട് സ്ഥലങ്ങളാണിഷ്ടാ", "https://te.legra.ph/Enthoott-namesaanishtaa-05-07"],
+          ["Jabbar - ചെറുകഥ", "https://te.legra.ph/Jabbar---Short-story-05-07"],
+          ["മീശപ്പുലിമലയിലേക്ക്", "https://te.legra.ph/A-trip-to-Meesapulimala-05-07"],
+          ["മണ്ണും മനസ്സും", "https://te.legra.ph/Mannum-manassum-05-07"],
+          ["കൊറോണ നാളുകൾ", "https://te.legra.ph/Quarantine-days-05-07"],
+          ["ഒരു മഴ കൂടി", "https://te.legra.ph/Oru-mazha-koodi-05-07"],
+          ["Kochi is a feeling", "https://te.legra.ph/Kochi-is-a-feeling-05-07"],
+          ["മഴയുടെ പുഴ", "https://te.legra.ph/Mazhayude-puzha-05-07"],
+          ["നായിന്റെ മക്കൾ", "https://te.legra.ph/Nayinte-makkal-05-07"],
+          ["സ്നേഹം സർവ്വം", "https://te.legra.ph/Morning-vibes-05-07"],
+          ["ഒരു പനിമഴ", "https://te.legra.ph/Oru-panimazha-05-07"],
+          ["അനന്തതയിലെ പൂക്കൾ", "https://te.legra.ph/Ananthathayile-pookkal-05-07"],
+          ["സൗഹൃദമഴകൾ", "https://te.legra.ph/Souhridamazhakal-05-07"],
+          ["ഡിസംബർ", "https://te.legra.ph/December-nights-05-07"],
+          ["രാത്രിമഴ", "https://te.legra.ph/Rathrimazha-05-07"],
+          ["വൈക്കത്തഷ്ടമി", "https://te.legra.ph/Vaikathashtami-05-07"],
+          ["കുംഭഭരണി മഹോത്സവം", "https://te.legra.ph/Kumbha-bharani-05-07"],
+          ["ആദ്യത്തെ സ്കൂൾ", "https://te.legra.ph/First-school-05-07"],
+          ["സെപ്റ്റംബർ എന്ന കൂട്ടുകാരി", "https://te.legra.ph/September-05-07"],
+          ["എന്റെ സ്കൂൾ", "https://te.legra.ph/Ente-school-05-12"],
+          ["Mission Pluto - Part 1", "https://te.legra.ph/Mission-Pluto---Part-1-05-07"],
+          ["Mission Pluto - Part 2", "https://te.legra.ph/Mission-Pluto---Part-2-05-07"],
+          ["ടെലഗ്രാമും ഞാനും", "https://te.legra.ph/Telegram-and-me-05-13"],
+          ["നിന്നിലേക്ക്", "https://te.legra.ph/Ninnilekk-05-22"]
+        ];
+
+        var TELEGRAM_POSTS = [
+          ["Telegram ഉം Telegram X ഉം, എന്താണ് വ്യത്യാസം? ഏതാണ് മികച്ചത്?", "https://te.legra.ph/Telegram-and-Telegram-X-07-09"],
+          ["ടെലഗ്രാം complicated ആണോ? വാട്സാപ്പ് പോലെ user friendly അല്ലേ?", "https://te.legra.ph/Is-telegram-complicated-01-16-2"],
+          ["ടെലഗ്രാം ചാറ്റിങ്ങ് neat &amp; clean ആക്കാൻ കുറച്ചു beginners ടിപ്പുകൾ...", "https://te.legra.ph/Telegram-easy-09-20"],
+          ["ടെലഗ്രാം അക്കൗണ്ട് റിക്കവറി &amp; ഡിലീഷൻ", "https://te.legra.ph/Telegram-account-recovery-and-deletion-06-29"],
+          ["എന്താണ് ചാനലുകൾ? കുറച്ചു നല്ല ടെലഗ്രാം ചാനലുകൾ കാണാം.", "https://te.legra.ph/Useful-Telegram-Channels-01-12"],
+          ["എന്താണ് ടെലഗ്രാം ബോട്ടുകൾ? കുറച്ചു ബോട്ടുകളെ പരിചയപ്പെടാം.", "https://te.legra.ph/Useful-Telegram-Bots-09-20"],
+          ["ടെലഗ്രാം ഫീച്ചറുകൾ: പ്രീമിയം വരുന്നതിന് മുന്നേയും ശേഷവും.", "https://te.legra.ph/Telegram-features-before-and-after-they-introduced-premium-subscription-10-23"],
+          ["ടെലഗ്രാം പ്രീമിയം സബ്സ്ക്രിപ്ഷനും സ്പെഷ്യൽ ഫീച്ചറുകളും.", "https://te.legra.ph/Telegram-Premium-06-20"],
+          ["ടെലഗ്രാമിൽ വ്യത്യസ്ത ഫയലുകൾക്ക് വ്യത്യസ്ത ഡൌൺലോഡ് സ്പീഡ് അനുഭവപ്പെടുന്നത് എന്തുകൊണ്ടാണ്?", "https://te.legra.ph/Difference-speed-for-different-files-09-02"],
+          ["ടെലഗ്രാമിൽ ശല്യക്കാരെ എങ്ങനെ ഒഴിവാക്കാം?", "https://te.legra.ph/Po-Kozhi-05-22"],
+          ["ടെലഗ്രാമിൽ MKV ഫയലുകൾ കണ്ടുകൊണ്ട് ഡൌൺലോഡ് ചെയ്യാം", "https://te.legra.ph/Stream-Telegram-Video-Files-03-10"],
+          ["ടെലഗ്രാമിൽ സ്റ്റിക്കർ പാക്കുകൾ എങ്ങനെ ഉണ്ടാക്കാം", "https://te.legra.ph/Telegram-stickers-10-13"],
+          ["ടെലഗ്രാമിൽ വീഡിയോ സ്റ്റിക്കർ പാക്കുകൾ എങ്ങനെ ഉണ്ടാക്കാം", "https://te.legra.ph/How-to-make-video-stickers-02-02"],
+          ["ടെലഗ്രാമിൽ kanged animated സ്റ്റിക്കർ പാക്ക് ഉണ്ടാക്കാം", "https://te.legra.ph/Telegram-Animated-Sticker-Pack-11-08"],
+          ["ടെലഗ്രാം bot ഉപയോഗിച്ച് apk ഉൾപ്പെടെയുള്ള ഫയലുകൾ എളുപ്പത്തിൽ antivirus scan ചെയ്യാം.", "https://te.legra.ph/Virustotal-online-antivirus-scan-10-28"],
+          ["ടെലഗ്രാമിൽ video ചാറ്റിൽ live TV, radio ഒക്കെ stream ചെയ്യുന്ന bot നിർമ്മിക്കാം", "https://te.legra.ph/Telegram-VC-streaming-bot-10-25"],
+          ["എന്തുകൊണ്ട് ടെലഗ്രാം വാട്സാപ്പിനെക്കാൾ മികച്ചതാവുന്നു?", "https://te.legra.ph/WhatsApp-vs-Telegram-08-23"],
+          ["വാട്സാപ്പിൽ കഴിഞ്ഞ വർഷങ്ങളിൽ വന്ന പ്രധാന ഫീച്ചറുകൾ.", "https://te.legra.ph/WhatsApp-university-of-inventions-05-23"],
+          ["വാട്സാപ്പിന്റെ അപ്ഡേഷനുകൾ ടെലിഗ്രാം കോപ്പിയോ?", "https://te.legra.ph/WhatsApp-and-Telegram-04-30"],
+          ["2030 ലെ വാട്സാപ്പ് എങ്ങനെയായിരിക്കും?", "https://te.legra.ph/How-about-the-future-WhatsApp-01-23"],
+          ["വാട്സാപ്പ് ഗ്രൂപ്പോ അതോ ടെലഗ്രാം ഗ്രൂപ്പോ?", "https://te.legra.ph/Telegram-groups-05-07"],
+          ["വാട്സാപ്പ് ചാറ്റുകൾ എങ്ങനെ ടെലഗ്രാമിലേക്ക് മാറ്റാം?", "https://te.legra.ph/Import-chats-in-Telegram-05-20"],
+          ["ടെലഗ്രാമിലെ സ്റ്റിക്കറുകൾ വാട്സാപ്പിലേക്ക് കൊണ്ടുവരാം", "https://te.legra.ph/Telegram-stickers-for-WhatsApp-08-03"],
+          ["ടെലഗ്രാമിൽ status tab വരുമോ?", "https://te.legra.ph/Status-tab-in-telegram-05-20"],
+          ["ടെലഗ്രാമിൽ stories ഫീച്ചർ എത്തി!", "https://te.legra.ph/Telegram-Stories-07-21"],
+          ["ടെലഗ്രാം ഇന്ത്യയിൽ നിരോധിക്കുമോ?", "https://te.legra.ph/Telegram-ban-05-23"],
+          ["ഓൺലൈൻ ക്ലാസ്സുകൾ ഇനി ടെലഗ്രാമിൽ...", "https://te.legra.ph/Telegram-for-online-classes-06-02"],
+          ["വീഡിയോ സ്റ്റിക്കർ ഫീച്ചറുമായി ടെലഗ്രാം 8.5 എത്തി.", "https://te.legra.ph/Telegram-85-with-video-stickers-02-01"],
+          ["ടെലഗ്രാമിൽ പരസ്യങ്ങൾ (Sponsored messages) &amp; വരുമാനം.", "https://te.legra.ph/Telegram-advertising-platform-11-05"],
+          ["എന്താണ് ടെലഗ്രാമിലെ യൂസർബോട്ടുകൾ?", "https://te.legra.ph/What-are-Telegram-userbots-11-06"],
+          ["യൂസർബോട്ട് safe ആണോ? എങ്ങനെയാണ് ഇത് setup ചെയ്യുന്നത്.", "https://te.legra.ph/Userge-userbot-setup-11-11"]
+        ];
+
+        function articleLine(i, l) {
+          var num = (i + 1 < 10 ? " " : "") + (i + 1);
+          return '  <span class="dim">' + num + '.</span>  <a class="ml" href="' + l[1] + '" target="_blank" rel="noopener">' + l[0] + '</a>';
+        }
+
+        function cmdMemories() {
+          print('<span class="bright b ml">Memories</span> <span class="dim">— 42 pieces from te.legra.ph/Memories-12-15</span>', "gap");
+          MEMORIES.forEach(function (l, i) { print(articleLine(i, l)); });
+          print("", "gap");
+        }
+
+        function cmdTelegram() {
+          print('<span class="bright b">Posts about Telegram</span> <span class="dim">— 31 articles from te.legra.ph/Telegram-uyir-09-20</span>', "gap");
+          TELEGRAM_POSTS.forEach(function (l, i) { print(articleLine(i, l)); });
+          print("", "gap");
+        }
+
+        function cmdContact() {
+          print('<span class="bright b">Say hello</span>');
+          print('  → Telegram: <a href="https://t.me/Deonnn" target="_blank" rel="noopener">t.me/Deonnn</a>');
+          print('  → WhatsApp: <a href="https://wa.me/919496063626?text=Hello%20Deon,%20What\'s%20up?%20" target="_blank" rel="noopener">wa.me/919496063626</a>');
+          print('  → Email:    <a href="mailto:deepakdeon@yahoo.com">deepakdeon@yahoo.com</a>', "gap");
+        }
+
+        /* ---------------- engine ---------------- */
+
+        var COMMANDS = {
+          help: cmdHelp,
+          about: cmdAbout,
+          links: cmdLinks,
+          socials: cmdLinks,
+          memories: cmdMemories,
+          telegram: cmdTelegram,
+          contact: cmdContact,
+          whoami: function () {
+            print('<span class="bright b">Deepak Deon</span> <span class="dim">— Blogger • Tweep • Tech enthusiast</span>');
+            print('Run <span class="grn">about</span> for more, or <span class="grn">links</span> for all my links.', "gap");
+          },
+          banner: function () { printBanner(); print(""); },
+          date: function () { print(esc(new Date().toString()), "gap"); },
+          ls: function () {
+            print('<span class="cyn">about.txt</span>  <span class="cyn">links.txt</span>  <span class="cyn">contact.txt</span>');
+            print('<span class="dim">Try running one — e.g.</span> <span class="grn">links</span>', "gap");
+          },
+          sudo: function () {
+            print('<span class="red">visitor is not in the sudoers file.</span> <span class="dim">This incident will be reported to Deon.</span>', "gap");
+          },
+          clear: function () { output.innerHTML = ""; }
+        };
+        var NAMES = Object.keys(COMMANDS).concat(["echo", "exit"]);
+
+        var history = [];
+        var histIdx = -1;
+
+        function run(raw) {
+          var cmdline = raw.trim();
+          print(PROMPT_HTML + " " + esc(cmdline));
+          if (!cmdline) return;
+          history.unshift(cmdline);
+          histIdx = -1;
+
+          var parts = cmdline.split(/\s+/);
+          var name = parts[0].toLowerCase();
+          var args = parts.slice(1).join(" ");
+
+          if (name === "echo") {
+            print(esc(args), "gap");
+          } else if (name === "exit") {
+            print('<span class="dim">There is no exit — you\'re on the web now. Try</span> <span class="grn">clear</span> <span class="dim">if you need a fresh screen.</span>', "gap");
+          } else if (COMMANDS[name]) {
+            COMMANDS[name]();
+          } else {
+            print('<span class="red">bash: ' + esc(name) + ': command not found</span> <span class="dim">— type</span> <span class="grn">help</span> <span class="dim">to see what\'s here.</span>', "gap");
+          }
+          scrollBottom();
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          run(input.value);
+          input.value = "";
+        });
+
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx] || ""; }
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (histIdx > 0) { histIdx--; input.value = history[histIdx] || ""; }
+            else { histIdx = -1; input.value = ""; }
+          } else if (e.key === "Tab") {
+            e.preventDefault();
+            var v = input.value.trim().toLowerCase();
+            if (v) {
+              var match = NAMES.filter(function (n) { return n.indexOf(v) === 0; });
+              if (match.length === 1) input.value = match[0];
+              else if (match.length > 1) { print(PROMPT_HTML + " " + esc(input.value)); print(match.join("   "), "gap"); }
+            }
+          } else if (e.key === "l" && e.ctrlKey) {
+            e.preventDefault();
+            output.innerHTML = "";
+          }
+        });
+
+        // Clicking anywhere in the screen focuses the input (but let links be links)
+        screen.addEventListener("click", function (e) {
+          if (e.target.closest("a")) return;
+          input.focus();
+        });
+
+        // Quick command buttons
+        document.querySelectorAll(".qbtn").forEach(function (b) {
+          b.addEventListener("click", function () {
+            input.value = "";
+            run(b.getAttribute("data-cmd"));
+            input.focus();
+          });
+        });
+
+        /* ---------------- boot sequence ---------------- */
+        function boot() {
+          print('<span class="dim">Last login: ' + esc(new Date().toDateString()) + '</span>');
+          printBanner();
+          print('<span class="bright b">Deepak Deon</span>');
+          print('Blogger • Tweep • Tech enthusiast');
+          print('Telegram 💙 | AndroidCommunity 🤖');
+          print("");
+          print('Type <span class="grn b">help</span> to see what you can do, <span class="grn b">about</span> for my bio, or <span class="grn b">links</span> for all my links — or tap a command below.', "gap");
+          input.focus();
+        }
+        if (reduceMotion) { boot(); }
+        else {
+          setTimeout(boot, 250);
+          setTimeout(function () { input.focus(); }, 400);
+        }
+      })();
+    </script>
+  </body>
+</html>
